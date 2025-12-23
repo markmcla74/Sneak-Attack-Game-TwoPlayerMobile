@@ -560,14 +560,14 @@
         messageBox.style.color = "white";
         messageBox.style.padding = "20px 40px";
         messageBox.style.borderRadius = "12px";
-        messageBox.style.fontSize = "2rem";
+        messageBox.style.fontSize = "1rem";
         messageBox.style.zIndex = "1000";
 
         document.body.appendChild(messageBox);
 
         setTimeout(() => {
             messageBox.remove(); // remove after visible for 1s
-        }, 1000);
+        }, 1500);
 
     }, 400); // ⏱️ delay before showing
 }
