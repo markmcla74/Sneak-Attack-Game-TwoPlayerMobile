@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="HTML Tidy for HTML5 for Linux version 5.6.0">
+  <title>Sneak Attack Game</title>
+  <link rel="stylesheet" href="style-1p.css">
+</head>
+<body>
+  <div id="overlay">
+    <div class="overlay-content">
+      <h1>Sneak Attack Game</h1>
+      <h2>How to Play</h2>
+      <ul>
+        <li>Arrow Btns = move. To remain still, press the Camouflage Btn when it's your turn.</li>
+        <li>"Camouflage" makes the player the same color as the tile that the player is on.</li>
+        <li>"Glow an opponent" removes the camouflage, and opponent becomes visible.</li>
+        <li>Attack range = 2 Manhattan steps. If attack succeeds, you win! If attack fails, the opponent wins!</li>
+        <li>The other way to win is to be first to reach the opposite corner.(Opponent's starting tile). The colored 'doors' at the edges will funnel you back to the center of the grid.</li>
+      </ul><br>
+      <button id="begin-btn">Begin Game</button>
+    </div>
+  </div><!-- Info section -->
+  <!-- <div class="info-section"> -->
+  <!--   <div class="info-box">  -->
+  <!-- <h1>Sneak Attack Game</h1> -->
+  <!-- Turn indicator -->
+  <div class="turn-container">
+    <div class="hud-box" id="p1-glows">
+      P1 Glows: 2
+    </div>
+    <div class="hud-box" id="turn-indicator">
+      Player 1's Turn
+    </div>
+    <div class="hud-box" id="p2-glows">
+      P2 Glows: 2
+    </div>
+  </div><!--   </div> -->
+  <!-- </div> -->
+  <!-- Game Grid -->
+  <div class="grid" id="game"></div><!-- Reset button -->
+  <div class="controls-container">
+    <!-- Left: Movement D-pad -->
+    <div class="controls-section dpad">
+      <div class="row">
+        <button id="btn-up">▲</button>
+      </div>
+      <div class="row">
+        <button id="btn-left">◀</button> <button id="btn-down">▼</button> <button id="btn-right">▶</button>
+      </div>
+    </div><!-- Middle: Special Abilities -->
+    <div class="controls-section abilities">
+      <button class="btn-glow" id="btn-glow">Glow</button> <button class="btn-camouflage" id="btn-camouflage">Camouflage</button>
+    </div><!-- Right: Attack & Reset -->
+    <div class="controls-section actions">
+      <button class="btn-attack" id="btn-attack">Attack</button> <button id="reset-btn" disabled>Reset</button>
+    </div>
+  </div><!-- <div class="reset-container">
+    <button id="reset-btn" disabled>Reset Game</button>
+  </div> -->
+  <script src="script-2pMobile.js"></script>
+</body>
+</html>
