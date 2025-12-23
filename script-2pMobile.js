@@ -539,7 +539,7 @@
         messageBox.style.color = "white";
         messageBox.style.padding = "20px 40px";
         messageBox.style.borderRadius = "12px";
-        messageBox.style.fontSize = "2rem";
+        messageBox.style.fontSize = "1.5rem";
         messageBox.style.zIndex = "1000";
         document.body.appendChild(messageBox);
         setTimeout(() => {
@@ -553,14 +553,15 @@
         const messageBox = document.createElement("div");
         messageBox.textContent = msg;
         messageBox.style.position = "fixed";
-        messageBox.style.top = "5%";
+        messageBox.style.top = "20%";
         messageBox.style.left = "50%";
+        messageBox.style.textAlign = "center";
         messageBox.style.transform = "translate(-50%, -50%)";
         messageBox.style.background = "rgba(0,0,0,0.7)";
         messageBox.style.color = "white";
         messageBox.style.padding = "20px 40px";
         messageBox.style.borderRadius = "12px";
-        messageBox.style.fontSize = "1rem";
+        messageBox.style.fontSize = "1.2rem";
         messageBox.style.zIndex = "1000";
 
         document.body.appendChild(messageBox);
