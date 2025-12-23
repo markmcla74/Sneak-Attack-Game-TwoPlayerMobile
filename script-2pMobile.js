@@ -211,8 +211,8 @@
                 }, 50);
             } else {
                 // Failed attack → opponent wins
-                player.symbol = "💥";
                 opponent.symbol = "●";
+                player.symbol = "💥";
                 document.getElementById("reset-btn").disabled = false;
                 gameOver = true;
                 renderGrid();
@@ -251,10 +251,7 @@
 
             // End turn
             return;
-        } //else {
-        //alert(`${currentPlayer} has no Glows left! Choose a different action`);
-        //}
-
+        } 
 
 
         // --- Camouflage actionKeys ---
@@ -375,7 +372,7 @@
                 }
 
                 //check corner win
-                checkCornerWin();
+                // checkCornerWin();
                 return;
             }
 
@@ -513,6 +510,7 @@
         if (players.P1.row === 5 && players.P1.col === 5) {
             showMessage("Player 1 Wins by reaching the corner!");
             players.P2.symbol = "💥"; // explosion for loser
+            players.P1.symbol = "●";
             gameOver = true;
             document.getElementById("reset-btn").disabled = false;
             renderGrid();
@@ -521,6 +519,7 @@
             //         bgAudio.currentTime = 0;
         } else if (players.P2.row === 0 && players.P2.col === 0) {
             showMessage("Player 2 Wins by reaching the corner!");
+            players.P2.symbol = "●";
             players.P1.symbol = "💥"; // explosion for loser
             gameOver = true;
             playVictoryChime();
@@ -548,6 +547,30 @@
         }, 4000);
 
     }
+    
+    function showTurnMessage(msg) {
+    setTimeout(() => {
+        const messageBox = document.createElement("div");
+        messageBox.textContent = msg;
+        messageBox.style.position = "fixed";
+        messageBox.style.top = "5%";
+        messageBox.style.left = "50%";
+        messageBox.style.transform = "translate(-50%, -50%)";
+        messageBox.style.background = "rgba(0,0,0,0.7)";
+        messageBox.style.color = "white";
+        messageBox.style.padding = "20px 40px";
+        messageBox.style.borderRadius = "12px";
+        messageBox.style.fontSize = "2rem";
+        messageBox.style.zIndex = "1000";
+
+        document.body.appendChild(messageBox);
+
+        setTimeout(() => {
+            messageBox.remove(); // remove after visible for 1s
+        }, 1000);
+
+    }, 400); // ⏱️ delay before showing
+}
 
     // Define fixed chime frequencies for each player
     const playerChimes = {
@@ -672,6 +695,7 @@
          //switchTurns();
         }
       switchTurns(); 
+      showTurnMessage(`Move completed. Pass the phone.`);
       renderGrid();
     }
    
