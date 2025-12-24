@@ -553,7 +553,7 @@
         const messageBox = document.createElement("div");
         messageBox.textContent = msg;
         messageBox.style.position = "fixed";
-        messageBox.style.top = "20%";
+        messageBox.style.top = "15%";
         messageBox.style.left = "50%";
         messageBox.style.textAlign = "center";
         messageBox.style.transform = "translate(-50%, -50%)";
@@ -696,8 +696,10 @@
          //switchTurns();
         }
       switchTurns(); 
+      if (!gameOver){
       showTurnMessage(`Move completed. Pass the phone.`);
       renderGrid();
+      }
     }
    
     
