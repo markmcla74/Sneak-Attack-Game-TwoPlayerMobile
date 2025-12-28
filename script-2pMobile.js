@@ -652,6 +652,114 @@
         setTimeout(() => playChime(), 300);
         setTimeout(() => playChime(), 600);
     }
+  let ctx;
+  let isPlaying = false;
+  let intervalIds = [];
+  function startMusic() {
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const tempo = 60;
+  const beat = 60 / tempo;
+
+  // ---- Master Gain ----
+  const master = ctx.createGain();
+  master.gain.value = 0.35;
+  master.connect(ctx.destination);
+
+  // ---- Dark, mellow filter ----
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 550;
+  filter.Q.value = 0.6;
+  filter.connect(master);
+
+  // ---------- LOW-PITCH SOFT PAD ----------
+  function playPad(freq) {
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.value = freq;
+
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 4);
+    gain.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 8);
+    gain.gain.linearRampToValueAtTime(0.0, ctx.currentTime + 12);
+
+    osc.connect(gain);
+    gain.connect(filter);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 13);
+  }
+
+  // notes LOWERED AN OCTAVE
+  const padLoop = setInterval(() => {
+    const notes = [
+      196,  // G3  (was 392)
+      207.65 // G#3 (was 415)
+    ];
+    playPad(notes[Math.floor(Math.random()*notes.length)]);
+  }, 12000);
+
+  intervalIds.push(padLoop);
+
+  // ---------- Bass heartbeat ----------
+  function playBass(freq) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.value = freq;
+
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+
+    osc.connect(gain);
+    gain.connect(filter);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 1);
+  }
+
+  const bassLoop = setInterval(() => {
+    playBass(110);
+  }, beat * 1000 * 2);
+
+  intervalIds.push(bassLoop);
+
+ 
+  // ---------- Tension click ----------
+  function playClick() {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = 1100;
+
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+
+    osc.connect(gain);
+    gain.connect(master);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  }
+
+  const clickLoop = setInterval(() => {
+    if (Math.random() > 0.5) playClick();
+  }, beat * 1000 * 1.5);
+
+  intervalIds.push(clickLoop);
+}
+function stopMusic() {
+  intervalIds.forEach(id => clearInterval(id));
+  intervalIds = [];
+  if (ctx) ctx.close();
+}
     
     function switchTurns() {
          if (!gameOver) {
@@ -668,8 +776,6 @@
     function handleButtonInput(actionKey, btnEl) {
         if (gameOver) return; // ignore actionKeys if game ended
         processActionKey(actionKey);
-        console.log("currentPlayer at handleButtonInput");
-        console.log(currentPlayer);
         // Visual feedback
         btnEl.classList.add("pressed");
         setTimeout(() => btnEl.classList.remove("pressed"), 150);
@@ -677,7 +783,7 @@
     
     function processActionKey(actionKey){
         if (gameOver) return;
-         console.log("START turn:", currentPlayer);
+         
         if (currentPlayer === "P1") {
            turnIndicator.textContent = "Player 1's Turn";
            turnIndicator.style.color = "lightgray"; // Player 1 cue
@@ -719,7 +825,8 @@
     document.getElementById("begin-btn").addEventListener("click", () => {
         document.getElementById("overlay").style.display = "none";
         // 🎵 Later, you can also start your game music here
-        bgAudio.play();
+        //bgAudio.play();
+        startMusic();
         document.getElementById("reset-btn").addEventListener("click", resetGame);
         renderGrid();
     });
