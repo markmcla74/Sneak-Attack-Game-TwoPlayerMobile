@@ -667,7 +667,7 @@ function startMusic() {
   master.connect(ctx.destination);
 
   // ---------- HELPER: PLAY NOTE ----------
-  function playNote(freq, length, volume = 0.25) {
+  function playNote(freq, length, volume = 0.16) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
