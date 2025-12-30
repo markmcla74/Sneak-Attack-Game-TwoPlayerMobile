@@ -191,7 +191,7 @@
         if ((currentPlayer === "P1" && actionKey === "attack") ||
             (currentPlayer === "P2" && actionKey === "attack")) {
             glowAttack(player);
-            playVictoryChime();
+            playRetroVictoryChime();
             let distance = Math.abs(player.row - opponent.row) + Math.abs(player.col - opponent.col);
             if (distance <= 2) {
                 // Successful attack
@@ -514,7 +514,7 @@
             gameOver = true;
             document.getElementById("reset-btn").disabled = false;
             renderGrid();
-            playVictoryChime();
+            playRetroVictoryChime();
             //  bgAudio.pause();
             //         bgAudio.currentTime = 0;
         } else if (players.P2.row === 0 && players.P2.col === 0) {
@@ -522,7 +522,7 @@
             players.P2.symbol = "●";
             players.P1.symbol = "💥"; // explosion for loser
             gameOver = true;
-            playVictoryChime();
+            playRetroVictoryChime();
             document.getElementById("reset-btn").disabled = false;
             renderGrid();
         }
@@ -573,85 +573,88 @@
     }, 400); // ⏱️ delay before showing
 }
 
-    // Define fixed chime frequencies for each player
-    const playerChimes = {
-        P1: 329.63, // E4
-        P2: 392.00 // G4
-    };
+  // Fixed chime frequencies (match retro theme)
+const playerChimes = {
+    P1: 329.63, // E4
+    P2: 392.00  // G4
+};
 
-    function playChimeForPlayer(playerId) {
-        const ctx = new(window.AudioContext || window.webkitAudioContext)();
+function playChimeForPlayer(playerId) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-        const freq = playerChimes[playerId]; // fixed tone per player
+    const baseFreq = playerChimes[playerId];
 
-        // Main oscillator
+    // --- helper to play a short retro blip ---
+    function blip(freq, startTime, length, volume=0.25) {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = "sine";
+
+        osc.type = "square";          // RETRO SOUND
         osc.frequency.value = freq;
 
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
+        gain.gain.setValueAtTime(volume, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + length);
 
         osc.connect(gain).connect(ctx.destination);
 
-        // Add a subtle shimmer
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = "sine";
-        osc2.frequency.value = freq * 1.01;
-        gain2.gain.setValueAtTime(0.05, ctx.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
-        osc2.connect(gain2).connect(ctx.destination);
-
-        osc.start();
-        osc.stop(ctx.currentTime + 2.0);
-        osc2.start();
-        osc2.stop(ctx.currentTime + 2.0);
+        osc.start(startTime);
+        osc.stop(startTime + length + 0.05);
     }
 
+    const now = ctx.currentTime;
 
-    function playChime() {
-        const ctx = new(window.AudioContext || window.webkitAudioContext)();
+    // Main blip
+    blip(baseFreq, now, 0.18, 0.22);
 
-        // Midrange pentatonic (C4–E5 range, no super low tones)
-        const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+    // Tiny echo blip (octave up) — very Atari-like
+    blip(baseFreq * 2, now + 0.08, 0.12, 0.16);
+}
 
-        // Pick a random midrange note
-        const freq = pentatonic[Math.floor(Math.random() * pentatonic.length)];
 
-        // Main oscillator
+  function playRetroVictoryChime() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    // G major arpeggio (bright + triumphant)
+    const notes = [
+        392.00, // G4
+        493.88, // B4
+        587.33  // D5
+    ];
+
+    function blip(freq, startTime, length = 0.16, volume = 0.32) {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = "sine";
+
+        osc.type = "square";              // retro character
         osc.frequency.value = freq;
 
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
+        gain.gain.setValueAtTime(volume, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + length);
 
         osc.connect(gain).connect(ctx.destination);
 
-        // Add subtle richness with a slightly detuned oscillator
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = "sine";
-        osc2.frequency.value = freq * 1.01; // gentle shimmer
-        gain2.gain.setValueAtTime(0.05, ctx.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
-        osc2.connect(gain2).connect(ctx.destination);
-
-        osc.start();
-        osc.stop(ctx.currentTime + 2.0);
-        osc2.start();
-        osc2.stop(ctx.currentTime + 2.0);
+        osc.start(startTime);
+        osc.stop(startTime + length + 0.05);
     }
 
-    function playVictoryChime() {
-        // Play 3 chimes spaced 300ms apart
-        playChime();
-        setTimeout(() => playChime(), 300);
-        setTimeout(() => playChime(), 600);
+    let t = now;
+
+    // Play the arpeggio 3 times with emphasis
+    for (let repeat = 0; repeat < 3; repeat++) {
+
+        // Rising triad
+        blip(notes[0], t, 0.14, 0.30);         // G
+        blip(notes[1], t + 0.14, 0.14, 0.30);  // B
+        blip(notes[2], t + 0.28, 0.20, 0.34);  // D (slightly longer)
+
+        // Dramatic octave hit on top note
+        blip(notes[2] * 2, t + 0.28, 0.20, 0.28);
+
+        t += 0.62; // short break before next flourish
     }
+}
+ 
   let ctx;
   let isPlaying = false;
   let intervalIds = [];
