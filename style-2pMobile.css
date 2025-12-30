@@ -159,6 +159,7 @@ background-color: lightblue; }
   align-items: center;
   justify-content: center;
   z-index: 1000; /* ensure it's above everything */
+  overflow-y: auto;   /* <-- add this */
 }
 /* Centered box */
 .overlay-content {
