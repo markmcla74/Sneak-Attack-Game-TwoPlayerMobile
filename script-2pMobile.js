@@ -655,106 +655,66 @@
   let ctx;
   let isPlaying = false;
   let intervalIds = [];
-  function startMusic() {
+  
+function startMusic() {
   ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-  const tempo = 60;
-  const beat = 60 / tempo;
+  const tempo = 72;                    // slightly slow
+  const beat = 60 / tempo;             // seconds per beat
 
-  // ---- Master Gain ----
   const master = ctx.createGain();
-  master.gain.value = 0.35;
+  master.gain.value = 0.25;
   master.connect(ctx.destination);
 
-  // ---- Dark, mellow filter ----
-  const filter = ctx.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.value = 550;
-  filter.Q.value = 0.6;
-  filter.connect(master);
-
-  // ---------- LOW-PITCH SOFT PAD ----------
-  function playPad(freq) {
-
+  // ---------- HELPER: PLAY NOTE ----------
+  function playNote(freq, length, volume = 0.25) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    osc.type = "sine";
+    osc.type = "square";               // retro sound
     osc.frequency.value = freq;
 
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 4);
-    gain.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 8);
-    gain.gain.linearRampToValueAtTime(0.0, ctx.currentTime + 12);
-
-    osc.connect(gain);
-    gain.connect(filter);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 13);
-  }
-
-  // notes LOWERED AN OCTAVE
-  const padLoop = setInterval(() => {
-    const notes = [
-      196,  // G3  (was 392)
-      207.65 // G#3 (was 415)
-    ];
-    playPad(notes[Math.floor(Math.random()*notes.length)]);
-  }, 12000);
-
-  intervalIds.push(padLoop);
-
-  // ---------- Bass heartbeat ----------
-  function playBass(freq) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.value = freq;
-
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
-
-    osc.connect(gain);
-    gain.connect(filter);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 1);
-  }
-
-  const bassLoop = setInterval(() => {
-    playBass(110);
-  }, beat * 1000 * 2);
-
-  intervalIds.push(bassLoop);
-
- 
-  // ---------- Tension click ----------
-  function playClick() {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.value = 1100;
-
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+    gain.gain.value = volume;
 
     osc.connect(gain);
     gain.connect(master);
 
     osc.start();
-    osc.stop(ctx.currentTime + 0.3);
+    osc.stop(ctx.currentTime + length);
   }
 
-  const clickLoop = setInterval(() => {
-    if (Math.random() > 0.5) playClick();
-  }, beat * 1000 * 1.5);
+  // ---------- BASS (steady heartbeat) ----------
+  const bassLoop = setInterval(() => {
+    playNote(196, 0.18, 0.28);  // G3
+  }, beat * 1000 * 2);          // every 2 beats
 
-  intervalIds.push(clickLoop);
+  intervalIds.push(bassLoop);
+
+  // ---------- ARPEGGIO (light tension) ----------
+  const notes = [
+    294,  // D4
+    330,  // E4
+    349   // F4 – minor mood
+  ];
+
+  let step = 0;
+
+  const arpLoop = setInterval(() => {
+    playNote(notes[step], 0.14, 0.18);
+    step = (step + 1) % notes.length;
+  }, beat * 1000 * 0.75);       // gentle ticking feel
+
+  intervalIds.push(arpLoop);
+
+  // ---------- OCCASIONAL HOLD NOTE ----------
+  const holdLoop = setInterval(() => {
+    playNote(262, 1.2, 0.10);   // soft C4 drone
+  }, 8000);
+
+  intervalIds.push(holdLoop);
 }
+
+ 
 function stopMusic() {
   intervalIds.forEach(id => clearInterval(id));
   intervalIds = [];
