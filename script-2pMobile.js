@@ -191,6 +191,7 @@
         if ((currentPlayer === "P1" && actionKey === "attack") ||
             (currentPlayer === "P2" && actionKey === "attack")) {
             glowAttack(player);
+            stopAtariJingle();
             playRetroVictoryChime();
             let distance = Math.abs(player.row - opponent.row) + Math.abs(player.col - opponent.col);
             if (distance <= 2) {
@@ -514,6 +515,7 @@
             gameOver = true;
             document.getElementById("reset-btn").disabled = false;
             renderGrid();
+            stopAtariJingle();
             playRetroVictoryChime();
             //  bgAudio.pause();
             //         bgAudio.currentTime = 0;
@@ -522,6 +524,7 @@
             players.P2.symbol = "●";
             players.P1.symbol = "💥"; // explosion for loser
             gameOver = true;
+            stopAtariJingle();
             playRetroVictoryChime();
             document.getElementById("reset-btn").disabled = false;
             renderGrid();
@@ -655,75 +658,97 @@ function playChimeForPlayer(playerId) {
     }
 }
  
-  let ctx;
-  let isPlaying = false;
-  let intervalIds = [];
-  
-function startMusic() {
-  ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-  const tempo = 72;                    // slightly slow
-  const beat = 60 / tempo;             // seconds per beat
+let jingleCtx = null;
+let jingleStop = null;
 
-  const master = ctx.createGain();
-  master.gain.value = 0.25;
-  master.connect(ctx.destination);
+function startAtariJingle() {
+    if (jingleCtx) return;
 
-  // ---------- HELPER: PLAY NOTE ----------
-  function playNote(freq, length, volume = 0.16) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    jingleCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = jingleCtx;
 
-    osc.type = "square";               // retro sound
-    osc.frequency.value = freq;
+    // --- MASTER VOLUME (50%) ---
+    const master = ctx.createGain();
+    master.gain.value = 0.5;     // 👈 half volume
+    master.connect(ctx.destination);
 
-    gain.gain.value = volume;
+    const tempo = 120;
+    const beat = 60 / tempo;
+    const loopBeats = 20;
+    const loopLength = beat * loopBeats;
 
-    osc.connect(gain);
-    gain.connect(master);
+    const melody = [
+        523.25, 587.33, 659.25, 587.33,
+        523.25, 659.25, 587.33, 523.25,
+        659.25, 698.46, 783.99, 698.46,
+        659.25, 783.99, 698.46, 659.25,
+        587.33, 523.25, 493.88, 523.25
+    ];
 
-    osc.start();
-    osc.stop(ctx.currentTime + length);
-  }
+    const harmony = [
+        659.25, 698.46, 783.99, 698.46,
+        659.25, 783.99, 698.46, 659.25,
+        783.99, 880.00, 987.77, 880.00,
+        783.99, 987.77, 880.00, 783.99,
+        698.46, 659.25, 587.33, 659.25
+    ];
 
-  // ---------- BASS (steady heartbeat) ----------
-  const bassLoop = setInterval(() => {
-    playNote(196, 0.18, 0.28);  // G3
-  }, beat * 1000 * 2);          // every 2 beats
+    function blip(freq, startTime, length = 0.18, volume = 0.24) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
 
-  intervalIds.push(bassLoop);
+        osc.type = "square";
+        osc.frequency.value = freq;
 
-  // ---------- ARPEGGIO (light tension) ----------
-  const notes = [
-    294,  // D4
-    330,  // E4
-    349   // F4 – minor mood
-  ];
+        gain.gain.setValueAtTime(volume, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + length);
 
-  let step = 0;
+        osc.connect(gain).connect(master);
 
-  const arpLoop = setInterval(() => {
-    playNote(notes[step], 0.14, 0.18);
-    step = (step + 1) % notes.length;
-  }, beat * 1000 * 0.75);       // gentle ticking feel
+        osc.start(startTime);
+        osc.stop(startTime + length + 0.05);
+    }
 
-  intervalIds.push(arpLoop);
+    function playJingle(startTime) {
+        for (let i = 0; i < melody.length; i++)
+            blip(melody[i], startTime + i * beat, 0.18, 0.26);
 
-  // ---------- OCCASIONAL HOLD NOTE ----------
-  const holdLoop = setInterval(() => {
-    playNote(262, 1.2, 0.10);   // soft C4 drone
-  }, 8000);
+        for (let i = 0; i < harmony.length; i++)
+            blip(harmony[i], startTime + i * beat, 0.18, 0.16);
 
-  intervalIds.push(holdLoop);
+        for (let i = 0; i < loopBeats / 2; i++)
+            blip(130.81, startTime + i * beat * 2, 0.26, 0.22);
+
+        const twinkleStart = startTime + loopLength - beat * 0.8;
+        blip(783.99, twinkleStart, 0.10, 0.22);
+        blip(987.77, twinkleStart + 0.12, 0.10, 0.22);
+        blip(1174.66, twinkleStart + 0.24, 0.14, 0.20);
+    }
+
+    let next = ctx.currentTime;
+
+    function scheduleLoop() {
+        playJingle(next);
+        next += loopLength;
+        timer = setTimeout(scheduleLoop, loopLength * 900);
+    }
+
+    scheduleLoop();
+
+    jingleStop = () => {
+        clearTimeout(timer);
+        ctx.close();
+        jingleCtx = null;
+        jingleStop = null;
+    };
 }
 
- 
-function stopMusic() {
-  intervalIds.forEach(id => clearInterval(id));
-  intervalIds = [];
-  if (ctx) ctx.close();
+function stopAtariJingle() {
+    if (jingleStop) jingleStop();
 }
-    
+
+
     function switchTurns() {
          if (!gameOver) {
                     // Switch turns after a move
@@ -789,7 +814,7 @@ function stopMusic() {
         document.getElementById("overlay").style.display = "none";
         // 🎵 Later, you can also start your game music here
         //bgAudio.play();
-        startMusic();
+        startAtariJingle();
         document.getElementById("reset-btn").addEventListener("click", resetGame);
         renderGrid();
     });
